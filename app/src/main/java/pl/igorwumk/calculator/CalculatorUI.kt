@@ -56,6 +56,7 @@ fun CalculatorUI(
     val buttonSpacing = 8.dp
     val numberButtonColor = Color.hsv(0F, 0F, 0.5F)
     val actionButtonColor = Color.hsv(240F, 0.7F, 0.8F)
+    val removeButtonColor = Color.hsv(0F, 0.7F, 0.8F)
 
     Box(
         modifier = Modifier
@@ -95,6 +96,33 @@ fun CalculatorUI(
                 horizontalArrangement = Arrangement.spacedBy(buttonSpacing)
             ) {
                 CalculatorButton(
+                    symbol = "C",
+                    color = removeButtonColor,
+                    modifier = Modifier
+                        .aspectRatio(3f)
+                        .weight(3f)
+                        .clickable {
+                            viewModel.clear()
+                        }
+                )
+                CalculatorButton(
+                    symbol = "÷",
+                    color = actionButtonColor,
+                    modifier = Modifier
+                        .aspectRatio(1f)
+                        .weight(1f)
+                        .clickable {
+                            viewModel.append("/")
+                        }
+                )
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(buttonSpacing)
+            ) {
+                CalculatorButton(
                     symbol = "7",
                     color = numberButtonColor,
                     modifier = Modifier
@@ -125,13 +153,13 @@ fun CalculatorUI(
                         }
                 )
                 CalculatorButton(
-                    symbol = "÷",
+                    symbol = "×",
                     color = actionButtonColor,
                     modifier = Modifier
                         .aspectRatio(1f)
                         .weight(1f)
                         .clickable {
-                            viewModel.append("/")
+                            viewModel.append("*")
                         }
                 )
             }
@@ -172,13 +200,13 @@ fun CalculatorUI(
                         }
                 )
                 CalculatorButton(
-                    symbol = "×",
+                    symbol = "-",
                     color = actionButtonColor,
                     modifier = Modifier
                         .aspectRatio(1f)
                         .weight(1f)
                         .clickable {
-                            viewModel.append("*")
+                            viewModel.append("-")
                         }
                 )
             }
@@ -219,13 +247,13 @@ fun CalculatorUI(
                         }
                 )
                 CalculatorButton(
-                    symbol = "-",
+                    symbol = "+",
                     color = actionButtonColor,
                     modifier = Modifier
                         .aspectRatio(1f)
                         .weight(1f)
                         .clickable {
-                            viewModel.append("-")
+                            viewModel.append("+")
                         }
                 )
             }
@@ -256,23 +284,23 @@ fun CalculatorUI(
                         }
                 )
                 CalculatorButton(
+                    symbol = "CC",
+                    color = removeButtonColor,
+                    modifier = Modifier
+                        .aspectRatio(1f)
+                        .weight(1f)
+                        .clickable {
+                            viewModel.removeLastCharacter()
+                        }
+                )
+                CalculatorButton(
                     symbol = "=",
                     color = actionButtonColor,
                     modifier = Modifier
                         .aspectRatio(1f)
                         .weight(1f)
                         .clickable {
-                            viewModel.append("=")
-                        }
-                )
-                CalculatorButton(
-                    symbol = "+",
-                    color = actionButtonColor,
-                    modifier = Modifier
-                        .aspectRatio(1f)
-                        .weight(1f)
-                        .clickable {
-                            viewModel.append("+")
+                            viewModel.evaluate()
                         }
                 )
             }
