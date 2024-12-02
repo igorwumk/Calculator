@@ -9,20 +9,25 @@ class CalculatorViewModel : ViewModel() {
     private var faultState = false
     val expression = mutableStateOf("0")
 
+    private external fun addJNI(leftValue: Double, rightValue: Double): Double
+    private external fun subtractJNI(leftValue: Double, rightValue: Double): Double
+    private external fun multiplyJNI(leftValue: Double, rightValue: Double): Double
+    private external fun divideJNI(leftValue: Double, rightValue: Double): Double
+
     private fun add(leftValue: Double, rightValue: Double): Double {
-        return leftValue + rightValue
+        return addJNI(leftValue, rightValue)
     }
 
     private fun subtract(leftValue: Double, rightValue: Double): Double {
-        return leftValue - rightValue
+        return subtractJNI(leftValue, rightValue)
     }
 
     private fun multiply(leftValue: Double, rightValue: Double): Double {
-        return leftValue * rightValue
+        return multiplyJNI(leftValue, rightValue)
     }
 
     private fun divide(leftValue: Double, rightValue: Double): Double {
-        return leftValue + rightValue
+        return divideJNI(leftValue, rightValue)
     }
 
     fun append(char: String) {

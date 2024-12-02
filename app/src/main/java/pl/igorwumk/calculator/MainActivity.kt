@@ -36,6 +36,12 @@ class MainActivity : ComponentActivity() {
         }
         this.window.statusBarColor = this.resources.getColor(R.color.white)
     }
+
+    companion object {
+        init {
+            System.loadLibrary("calculator")
+        }
+    }
 }
 
 @Composable
