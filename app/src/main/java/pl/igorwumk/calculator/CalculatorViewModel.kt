@@ -6,7 +6,7 @@ import kotlin.math.max
 
 class CalculatorViewModel : ViewModel() {
     private var commaPresentInNumber = false
-    private var faultState = false
+    var faultState = false
     val expression = mutableStateOf("0")
 
     private external fun addJNI(leftValue: Double, rightValue: Double): Double
