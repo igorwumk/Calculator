@@ -2,6 +2,7 @@ package pl.igorwumk.calculator
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import kotlin.math.max
 
 class CalculatorViewModel : ViewModel() {
     private var commaPresentInNumber = false
@@ -64,11 +65,114 @@ class CalculatorViewModel : ViewModel() {
     }
 
     fun evaluate() {
-        TODO("Not yet implemented")
+        parseMultiplicationDivision()
+        parseAdditionSubtraction()
     }
 
     fun clear() {
         expression.value = "0"
         commaPresentInNumber = false
+    }
+
+    private fun getNumberLeftOfOperator(index: Int) : Double {
+        var startIndex = index - 1
+        while(startIndex >= 0) {
+            if(expression.value[startIndex] in "+-*/") {
+                break
+            }
+            startIndex--
+        }
+        return expression.value.substring(max(startIndex, 0), index).toDouble()
+    }
+
+    private fun getNumberRightOfOperator(index: Int) : Double {
+        var endIndex = index + 1
+        while(endIndex < expression.value.length) {
+            if(expression.value[endIndex] in "+-*/") {
+                break
+            }
+            endIndex++
+        }
+
+        return when(endIndex) {
+            expression.value.length -> expression.value.substring(index + 1).toDouble()
+            else -> expression.value.substring(index + 1, endIndex).toDouble()
+        }
+    }
+
+    private fun parseMultiplicationDivision() {
+        var index = 0
+        while(index < expression.value.length) {
+            if(expression.value[index] in "*/") {
+                val leftValue = getNumberLeftOfOperator(index)
+                val rightValue = getNumberRightOfOperator(index)
+                var replaceString = "$leftValue${expression.value[index]}$rightValue"
+                replaceString = removeTrailingZeros(replaceString)
+                when(expression.value[index]) {
+                    '*' -> expression.value = expression.value.replaceFirst(replaceString, removeTrailingZeros((leftValue * rightValue).toString()))
+                    '/' -> expression.value = expression.value.replaceFirst(replaceString, removeTrailingZeros((leftValue / rightValue).toString()))
+                }
+                index = max(0, index - removeTrailingZeros(leftValue.toString()).length + 1)
+            }
+            index++
+        }
+
+        expression.value = removeTrailingZeros(expression.value)
+    }
+
+    private fun parseAdditionSubtraction() {
+        var index = 0
+        while(index < expression.value.length) {
+            if(expression.value[index] in "+-") {
+                val leftValue = getNumberLeftOfOperator(index)
+                val rightValue = getNumberRightOfOperator(index)
+                var replaceString = "$leftValue${expression.value[index]}$rightValue"
+                replaceString = removeTrailingZeros(replaceString)
+                when(expression.value[index]) {
+                    '+' -> expression.value = expression.value.replaceFirst(replaceString, removeTrailingZeros((leftValue + rightValue).toString()))
+                    '-' -> expression.value = expression.value.replaceFirst(replaceString, removeTrailingZeros((leftValue - rightValue).toString()))
+                }
+                index = max(0, index - removeTrailingZeros(leftValue.toString()).length + 1)
+            }
+            index++
+        }
+
+        expression.value = removeTrailingZeros(expression.value)
+    }
+
+    private fun removeTrailingZeros(replaceString: String): String {
+        var returnString = replaceString
+        var index = 0
+        while(index < returnString.length) {
+            if(returnString[index] == '.') {
+                var backLength = 0
+                val startIndex = index
+                var endIndex = index
+                var skip = false
+                while(index < returnString.length) {
+                    endIndex = index
+                    if(returnString[index] in "+-*/") {
+                        break
+                    }
+                    if(returnString[index] in "123456789") {
+                        skip = true
+                        break
+                    }
+                    backLength++
+                    index++
+                }
+                if(!skip) {
+                    returnString = if(index != returnString.length) {
+                        returnString.replaceRange(startIndex, endIndex, "")
+                    } else {
+                        returnString.substring(0, startIndex)
+                    }
+                    index -= backLength
+                }
+            }
+            index++
+        }
+
+        return returnString
     }
 }
