@@ -83,6 +83,12 @@ class CalculatorViewModel : ViewModel() {
                 if(expression.value.last() == '.') {
                     commaPresentInNumber = false
                 }
+                //set comma present status if number before removed operator has one
+                if(expression.value.last() in "+-*/") {
+                    if('.' in removeTrailingZeros(getNumberLeftOfOperator(expression.value.length - 1).toString())) {
+                        commaPresentInNumber = true
+                    }
+                }
                 //remove character
                 expression.value = expression.value.dropLast(1)
             }
@@ -93,7 +99,12 @@ class CalculatorViewModel : ViewModel() {
         if(!faultState) {
             parseMultiplicationDivision()
             parseAdditionSubtraction()
+            updateCommaStatus()
         }
+    }
+
+    private fun updateCommaStatus() {
+        commaPresentInNumber = '.' in expression.value
     }
 
     fun clear() {
