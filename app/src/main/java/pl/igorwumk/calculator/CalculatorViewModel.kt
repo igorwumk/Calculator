@@ -156,7 +156,7 @@ class CalculatorViewModel : ViewModel() {
                     '*' -> expression.value = expression.value.replaceFirst(replaceString, removeTrailingZeros(multiply(leftValue, rightValue).toString()))
                     '/' -> expression.value = expression.value.replaceFirst(replaceString, removeTrailingZeros(divide(leftValue, rightValue).toString()))
                 }
-                index = max(0, index - removeTrailingZeros(leftValue.toString()).length + 1)
+                index = max(0, index - removeTrailingZeros(leftValue.toString()).length)
             }
             index++
         }
@@ -176,7 +176,7 @@ class CalculatorViewModel : ViewModel() {
                     '+' -> expression.value = expression.value.replaceFirst(replaceString, removeTrailingZeros(add(leftValue, rightValue).toString()))
                     '-' -> expression.value = expression.value.replaceFirst(replaceString, removeTrailingZeros(subtract(leftValue, rightValue).toString()))
                 }
-                index = max(0, index - removeTrailingZeros(leftValue.toString()).length + 1)
+                index = max(0, index - removeTrailingZeros(leftValue.toString()).length)
             }
             index++
         }
