@@ -6,9 +6,29 @@ import kotlin.math.max
 
 class CalculatorViewModel : ViewModel() {
     private var commaPresentInNumber = false
+    private var faultState = false
     val expression = mutableStateOf("0")
 
+    private fun add(leftValue: Double, rightValue: Double): Double {
+        return leftValue + rightValue
+    }
+
+    private fun subtract(leftValue: Double, rightValue: Double): Double {
+        return leftValue - rightValue
+    }
+
+    private fun multiply(leftValue: Double, rightValue: Double): Double {
+        return leftValue * rightValue
+    }
+
+    private fun divide(leftValue: Double, rightValue: Double): Double {
+        return leftValue + rightValue
+    }
+
     fun append(char: String) {
+        if(faultState) {
+            return
+        }
         if(char in "123456789") {
             if(expression.value == "0") {
                 // incoming 1-9, 0 in exp -> replace 0 with incoming value
@@ -48,7 +68,7 @@ class CalculatorViewModel : ViewModel() {
     }
 
     fun removeLastCharacter() {
-        if(expression.value != "0") {
+        if(expression.value != "0" && !faultState) {
             //replace digit with 0 if it's the only digit
             if(expression.value.length == 1) {
                 expression.value = "0"
@@ -65,13 +85,16 @@ class CalculatorViewModel : ViewModel() {
     }
 
     fun evaluate() {
-        parseMultiplicationDivision()
-        parseAdditionSubtraction()
+        if(!faultState) {
+            parseMultiplicationDivision()
+            parseAdditionSubtraction()
+        }
     }
 
     fun clear() {
         expression.value = "0"
         commaPresentInNumber = false
+        faultState = false
     }
 
     private fun getNumberLeftOfOperator(index: Int) : Double {
@@ -108,9 +131,14 @@ class CalculatorViewModel : ViewModel() {
                 val rightValue = getNumberRightOfOperator(index)
                 var replaceString = "$leftValue${expression.value[index]}$rightValue"
                 replaceString = removeTrailingZeros(replaceString)
+                if(expression.value[index] == '/' && rightValue == 0.0) {
+                    expression.value = "can't divide by zero"
+                    faultState = true
+                    return
+                }
                 when(expression.value[index]) {
-                    '*' -> expression.value = expression.value.replaceFirst(replaceString, removeTrailingZeros((leftValue * rightValue).toString()))
-                    '/' -> expression.value = expression.value.replaceFirst(replaceString, removeTrailingZeros((leftValue / rightValue).toString()))
+                    '*' -> expression.value = expression.value.replaceFirst(replaceString, removeTrailingZeros(multiply(leftValue, rightValue).toString()))
+                    '/' -> expression.value = expression.value.replaceFirst(replaceString, removeTrailingZeros(divide(leftValue, rightValue).toString()))
                 }
                 index = max(0, index - removeTrailingZeros(leftValue.toString()).length + 1)
             }
@@ -129,8 +157,8 @@ class CalculatorViewModel : ViewModel() {
                 var replaceString = "$leftValue${expression.value[index]}$rightValue"
                 replaceString = removeTrailingZeros(replaceString)
                 when(expression.value[index]) {
-                    '+' -> expression.value = expression.value.replaceFirst(replaceString, removeTrailingZeros((leftValue + rightValue).toString()))
-                    '-' -> expression.value = expression.value.replaceFirst(replaceString, removeTrailingZeros((leftValue - rightValue).toString()))
+                    '+' -> expression.value = expression.value.replaceFirst(replaceString, removeTrailingZeros(add(leftValue, rightValue).toString()))
+                    '-' -> expression.value = expression.value.replaceFirst(replaceString, removeTrailingZeros(subtract(leftValue, rightValue).toString()))
                 }
                 index = max(0, index - removeTrailingZeros(leftValue.toString()).length + 1)
             }
