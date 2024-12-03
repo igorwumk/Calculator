@@ -7,13 +7,16 @@ import kotlin.math.max
 class CalculatorViewModel : ViewModel() {
     private var commaPresentInNumber = false
     var faultState = false
+    // mutableStateOf() makes UI subscribe to changes of value
     val expression = mutableStateOf("0")
 
+    // C++ functions
     private external fun addJNI(leftValue: Double, rightValue: Double): Double
     private external fun subtractJNI(leftValue: Double, rightValue: Double): Double
     private external fun multiplyJNI(leftValue: Double, rightValue: Double): Double
     private external fun divideJNI(leftValue: Double, rightValue: Double): Double
 
+    // arithmetic methods (can replace C++ calls if needed)
     private fun add(leftValue: Double, rightValue: Double): Double {
         return addJNI(leftValue, rightValue)
     }
@@ -30,7 +33,9 @@ class CalculatorViewModel : ViewModel() {
         return divideJNI(leftValue, rightValue)
     }
 
+    // appends character to end of expression
     fun append(char: String) {
+        // do not accept input if fault condition arised
         if(faultState) {
             return
         }
@@ -72,6 +77,7 @@ class CalculatorViewModel : ViewModel() {
         }
     }
 
+    // removes last character from expression
     fun removeLastCharacter() {
         if(expression.value != "0" && !faultState) {
             //replace digit with 0 if it's the only digit
@@ -95,7 +101,9 @@ class CalculatorViewModel : ViewModel() {
         }
     }
 
+    // evaluates expression - holder for helper functions
     fun evaluate() {
+        // only evaluate if not in a fault state
         if(!faultState) {
             parseMultiplicationDivision()
             parseAdditionSubtraction()
@@ -103,16 +111,21 @@ class CalculatorViewModel : ViewModel() {
         }
     }
 
+    // updates information on comma presence after processing
     private fun updateCommaStatus() {
+        // update value in relation to presence of comma in processed expression
         commaPresentInNumber = '.' in expression.value
     }
 
+    // clears screen and faults
     fun clear() {
+        // resets state of calculator: number and flags
         expression.value = "0"
         commaPresentInNumber = false
         faultState = false
     }
 
+    // returns number that is left of operator at expression.value[index]
     private fun getNumberLeftOfOperator(index: Int) : Double {
         var startIndex = index - 1
         while(startIndex >= 0) {
@@ -124,6 +137,7 @@ class CalculatorViewModel : ViewModel() {
         return expression.value.substring(max(startIndex, 0), index).toDouble()
     }
 
+    // returns number that is right of operator at expression.value[index]
     private fun getNumberRightOfOperator(index: Int) : Double {
         var endIndex = index + 1
         while(endIndex < expression.value.length) {
@@ -139,65 +153,83 @@ class CalculatorViewModel : ViewModel() {
         }
     }
 
+    // process multiplications and divisions in expression
     private fun parseMultiplicationDivision() {
         var index = 0
         while(index < expression.value.length) {
+            // parse if multiply/divide detected
             if(expression.value[index] in "*/") {
                 val leftValue = getNumberLeftOfOperator(index)
                 val rightValue = getNumberRightOfOperator(index)
+                // building string that is to be replaced
                 var replaceString = "$leftValue${expression.value[index]}$rightValue"
+                // remove redundant zeros in replace string
                 replaceString = removeTrailingZeros(replaceString)
+                // enter fault state if trying to divide by zero
                 if(expression.value[index] == '/' && rightValue == 0.0) {
                     expression.value = "can't divide by zero"
                     faultState = true
                     return
                 }
+                // evaluate expression
                 when(expression.value[index]) {
                     '*' -> expression.value = expression.value.replaceFirst(replaceString, removeTrailingZeros(multiply(leftValue, rightValue).toString()))
                     '/' -> expression.value = expression.value.replaceFirst(replaceString, removeTrailingZeros(divide(leftValue, rightValue).toString()))
                 }
+                // shift index back to point it at the right place (it's alright if we go back a little too much, but not beyond the beginning)
                 index = max(0, index - removeTrailingZeros(leftValue.toString()).length)
             }
             index++
         }
-
+        // remove trailing zeros from result
         expression.value = removeTrailingZeros(expression.value)
     }
 
+    // process additions and subtractions in expression
     private fun parseAdditionSubtraction() {
         var index = 0
         while(index < expression.value.length) {
+            // parse if add/subtract detected
             if(expression.value[index] in "+-") {
                 val leftValue = getNumberLeftOfOperator(index)
                 val rightValue = getNumberRightOfOperator(index)
+                // building string that is to be replaced
                 var replaceString = "$leftValue${expression.value[index]}$rightValue"
+                // remove redundant zeros in replace string
                 replaceString = removeTrailingZeros(replaceString)
+                // evaluate expression
                 when(expression.value[index]) {
                     '+' -> expression.value = expression.value.replaceFirst(replaceString, removeTrailingZeros(add(leftValue, rightValue).toString()))
                     '-' -> expression.value = expression.value.replaceFirst(replaceString, removeTrailingZeros(subtract(leftValue, rightValue).toString()))
                 }
+                // shift index back to point it at the right place
                 index = max(0, index - removeTrailingZeros(leftValue.toString()).length)
             }
             index++
         }
-
+        // remove trailing zeros from result
         expression.value = removeTrailingZeros(expression.value)
     }
 
+    // returns expression with redundant zeros removed
     private fun removeTrailingZeros(replaceString: String): String {
         var returnString = replaceString
         var index = 0
         while(index < returnString.length) {
+            // activate when comma detected
             if(returnString[index] == '.') {
                 var backLength = 0
                 val startIndex = index
                 var endIndex = index
                 var skip = false
+                // when not at end of return string
                 while(index < returnString.length) {
                     endIndex = index
+                    // exit loop if operand detected -> we have zeros to remove
                     if(returnString[index] in "+-*/") {
                         break
                     }
+                    // non-zero digit detected -> no removing
                     if(returnString[index] in "123456789") {
                         skip = true
                         break
@@ -205,12 +237,15 @@ class CalculatorViewModel : ViewModel() {
                     backLength++
                     index++
                 }
+                // if detected zeros to remove
                 if(!skip) {
+                    // delete set range of characters, or to the end if we're at the end of return string
                     returnString = if(index != returnString.length) {
                         returnString.replaceRange(startIndex, endIndex, "")
                     } else {
                         returnString.substring(0, startIndex)
                     }
+                    // shift back index
                     index -= backLength
                 }
             }
