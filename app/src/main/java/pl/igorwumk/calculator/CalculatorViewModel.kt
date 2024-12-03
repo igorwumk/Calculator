@@ -3,7 +3,9 @@ package pl.igorwumk.calculator
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import java.math.BigDecimal
+import kotlin.math.abs
 import kotlin.math.max
+import kotlin.math.pow
 
 class CalculatorViewModel : ViewModel() {
     private var commaPresentInNumber = false
@@ -19,6 +21,10 @@ class CalculatorViewModel : ViewModel() {
 
     // arithmetic methods (can replace C++ calls if needed)
     private fun add(leftValue: Double, rightValue: Double): Double {
+        val limit = (2.0).pow(50.0)
+        if(abs(leftValue) >= limit || abs(rightValue) >= limit) {
+            throw NumberFormatException()
+        }
         return addJNI(leftValue, rightValue)
     }
 
@@ -27,6 +33,10 @@ class CalculatorViewModel : ViewModel() {
     }
 
     private fun multiply(leftValue: Double, rightValue: Double): Double {
+        val limit = (2.0).pow(50.0)
+        if(abs(leftValue) >= limit || abs(rightValue) >= limit) {
+            throw NumberFormatException()
+        }
         return multiplyJNI(leftValue, rightValue)
     }
 
@@ -107,8 +117,13 @@ class CalculatorViewModel : ViewModel() {
         // only evaluate if not in a fault state
         if(!faultState) {
             fixMalformedExpression()
-            parseMultiplicationDivision()
-            parseAdditionSubtraction()
+            try {
+                parseMultiplicationDivision()
+                parseAdditionSubtraction()
+            } catch (e: NumberFormatException) {
+                enterFaultState("too big/small")
+                return
+            }
             updateCommaStatus()
         }
     }
