@@ -105,6 +105,7 @@ class CalculatorViewModel : ViewModel() {
     fun evaluate() {
         // only evaluate if not in a fault state
         if(!faultState) {
+            fixMalformedExpression()
             parseMultiplicationDivision()
             parseAdditionSubtraction()
             updateCommaStatus()
@@ -253,5 +254,24 @@ class CalculatorViewModel : ViewModel() {
         }
 
         return returnString
+    }
+
+    // fix malformed expression before processing
+    private fun fixMalformedExpression() {
+        // remove dangling operand from end
+        if(expression.value.last() in "+-*/") {
+            expression.value = expression.value.dropLast(1)
+        }
+        // add 0 at beginning if first character is a minus
+        if(expression.value.first() == '-') {
+            val sb = StringBuilder()
+            sb.append("0").append(expression.value)
+            expression.value = sb.toString()
+        }
+    }
+
+    private fun enterFaultState(text: String) {
+        expression.value = text
+        faultState = true
     }
 }
