@@ -2,6 +2,7 @@ package pl.igorwumk.calculator
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import java.math.BigDecimal
 import kotlin.math.max
 
 class CalculatorViewModel : ViewModel() {
@@ -163,19 +164,18 @@ class CalculatorViewModel : ViewModel() {
                 val leftValue = getNumberLeftOfOperator(index)
                 val rightValue = getNumberRightOfOperator(index)
                 // building string that is to be replaced
-                var replaceString = "$leftValue${expression.value[index]}$rightValue"
+                var replaceString = "${removeTrailingZeros(BigDecimal.valueOf(leftValue).toPlainString())}${expression.value[index]}${removeTrailingZeros(BigDecimal.valueOf(rightValue).toPlainString())}"
                 // remove redundant zeros in replace string
                 replaceString = removeTrailingZeros(replaceString)
                 // enter fault state if trying to divide by zero
                 if(expression.value[index] == '/' && rightValue == 0.0) {
-                    expression.value = "can't divide by zero"
-                    faultState = true
+                    enterFaultState("can't divide by 0")
                     return
                 }
                 // evaluate expression
                 when(expression.value[index]) {
-                    '*' -> expression.value = expression.value.replaceFirst(replaceString, removeTrailingZeros(multiply(leftValue, rightValue).toString()))
-                    '/' -> expression.value = expression.value.replaceFirst(replaceString, removeTrailingZeros(divide(leftValue, rightValue).toString()))
+                    '*' -> expression.value = expression.value.replaceFirst(replaceString, removeTrailingZeros(multiply(leftValue, rightValue).toBigDecimal().toPlainString()))
+                    '/' -> expression.value = expression.value.replaceFirst(replaceString, removeTrailingZeros(divide(leftValue, rightValue).toBigDecimal().toPlainString()))
                 }
                 // shift index back to point it at the right place (it's alright if we go back a little too much, but not beyond the beginning)
                 index = max(0, index - removeTrailingZeros(leftValue.toString()).length)
@@ -195,13 +195,13 @@ class CalculatorViewModel : ViewModel() {
                 val leftValue = getNumberLeftOfOperator(index)
                 val rightValue = getNumberRightOfOperator(index)
                 // building string that is to be replaced
-                var replaceString = "$leftValue${expression.value[index]}$rightValue"
+                var replaceString = "${removeTrailingZeros(BigDecimal.valueOf(leftValue).toPlainString())}${expression.value[index]}${removeTrailingZeros(BigDecimal.valueOf(rightValue).toPlainString())}"
                 // remove redundant zeros in replace string
                 replaceString = removeTrailingZeros(replaceString)
                 // evaluate expression
                 when(expression.value[index]) {
-                    '+' -> expression.value = expression.value.replaceFirst(replaceString, removeTrailingZeros(add(leftValue, rightValue).toString()))
-                    '-' -> expression.value = expression.value.replaceFirst(replaceString, removeTrailingZeros(subtract(leftValue, rightValue).toString()))
+                    '+' -> expression.value = expression.value.replaceFirst(replaceString, removeTrailingZeros(add(leftValue, rightValue).toBigDecimal().toPlainString()))
+                    '-' -> expression.value = expression.value.replaceFirst(replaceString, removeTrailingZeros(subtract(leftValue, rightValue).toBigDecimal().toPlainString()))
                 }
                 // shift index back to point it at the right place
                 index = max(0, index - removeTrailingZeros(leftValue.toString()).length)
@@ -220,20 +220,27 @@ class CalculatorViewModel : ViewModel() {
             // activate when comma detected
             if(returnString[index] == '.') {
                 var backLength = 0
-                val startIndex = index
+                var startIndex = index
                 var endIndex = index
                 var skip = false
+                var seekingZero = false
                 // when not at end of return string
                 while(index < returnString.length) {
                     endIndex = index
-                    // exit loop if operand detected -> we have zeros to remove
+                    // exit loop if operand detected
                     if(returnString[index] in "+-*/") {
                         break
                     }
-                    // non-zero digit detected -> no removing
+                    // non-zero digit detected -> no removing (for now)
                     if(returnString[index] in "123456789") {
                         skip = true
-                        break
+                        seekingZero = true
+                    }
+                    // zero detected -> point start index of removal and stop seeking zero
+                    if(returnString[index] in "0" && seekingZero) {
+                        skip = false
+                        startIndex = index
+                        seekingZero = false
                     }
                     backLength++
                     index++
