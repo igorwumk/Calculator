@@ -28,7 +28,6 @@ fun CalculatorButton(
     symbol: String,
     modifier: Modifier = Modifier,
     color: Color = Color.White,
-    //textStyle: TextStyle = TextStyle()
 ) {
     Box(
         contentAlignment = Alignment.Center,
@@ -39,7 +38,6 @@ fun CalculatorButton(
     ) {
         Text(
             text = symbol,
-            //style = textStyle,
             fontSize = 36.sp,
             color = Color.White
         )
